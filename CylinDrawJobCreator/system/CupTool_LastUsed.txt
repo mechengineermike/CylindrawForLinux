@@ -1,0 +1,13 @@
+PAPER
+ Cup Type (0 = cylinder, 1 = goblet, 2= paper) 
+2
+ Max Cup Diameter in mm 
+102.0
+ Min Cup Diameter in mm 
+102.0
+ Cup Height in mm 
+216.0
+ Stroke Thickness in mm 
+0.5
+ Goblet Stem Height in mm 
+40.0

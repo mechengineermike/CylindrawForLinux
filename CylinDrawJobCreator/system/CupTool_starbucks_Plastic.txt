@@ -1,0 +1,13 @@
+starbucks_Plastic
+ Cup Type (0 = cylinder, 1 = goblet) 
+0
+ Max Cup Diameter in mm 
+80.0
+ Min Cup Diameter in mm 
+57.0
+ Cup Height in mm 
+140.0
+ Stroke Thickness in mm 
+0.5
+ Goblet Stem Height in mm 
+40.0

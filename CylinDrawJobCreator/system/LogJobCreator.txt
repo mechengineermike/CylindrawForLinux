@@ -1,0 +1,4 @@
+Note: for this log to properly record data you must exit the program using the EXIT button so give it the chance to log the data. 
+  Ver: 2.01 @ JobCreator CylinDraw Control Suite.
+ Current Time in ms: 1645380501504
+
