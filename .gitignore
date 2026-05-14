@@ -3,6 +3,8 @@
 *.json
 *.parquet
 
+*.jar
+
 ### TwinCAT3 ###
 # website: https://www.beckhoff.com/twincat3/
 
