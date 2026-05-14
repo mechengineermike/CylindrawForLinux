@@ -2,5 +2,9 @@ Cylindraw for Linux
 
 
 
-experimenting...
+https://github.com/mechengineermike/CylindrawForLinux.git
+
+
+
+Still setting things up. Assume nothing works until this note is updated.
 
