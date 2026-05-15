@@ -134,6 +134,7 @@ String filePath;
 String fileName = ""; // Name of the file to convert. 
 String fileNameOriginal = ""; // Name of the file to convert.
 String destName;
+boolean pendingImageLoadFromPicker = false;
  
     int idealHeight;
     int idealWidth;
@@ -193,9 +194,12 @@ void settings() {
     e.printStackTrace();
     size(1500, 900);   //load size from hard dimensions
   }  */
-  size(displayWidth-50, displayHeight-50, P3D); //p3d necessary because we rotate the image & use camera, but need to switrch to p2d to render faster and more accurately!. Do not attempt fullscreen. // fullScreen(P3D);   //.setResizable(true);////surface.setSize(xWindow, yWindow);surface.setLocation(0,0);
+  // Start smaller than fullscreen so control buttons remain visible on Pi displays.
+  xWindow = min(displayWidth - 80, 1200);
+  yWindow = min(displayHeight - 180, 740);
+  size(xWindow, yWindow, P3D); //p3d necessary because we rotate the image & use camera, but need to switrch to p2d to render faster and more accurately!. Do not attempt fullscreen. // fullScreen(P3D);   //.setResizable(true);////surface.setSize(xWindow, yWindow);surface.setLocation(0,0);
   noSmooth(); //Not sure why I said yes but smooothing does slow things down... //YES WE DO WANT TO SMOOTH AFTER DONE TROUBLESHOOTING LATER
-  logoHeaderImg = requestImage("\\system\\logoDePixelizer.png");//loadImage("logo.png"); //Header Image
+  logoHeaderImg = requestImage("system/logoDePixelizer.png");//loadImage("logo.png"); //Header Image
   
 }
 
@@ -203,8 +207,8 @@ void settings() {
 void setup() {
   if (xWindow >displayWidth){xWindow = displayWidth-50;}
   if (yWindow >displayHeight){ yWindow= displayHeight-50;}
-  frame.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
-  frame.setLocation(displayWidth/2-width/2,displayHeight/2-height/2); 
+  surface.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
+  surface.setLocation(displayWidth/2-width/2,displayHeight/2-height/2); 
   
   surface.setTitle("CylinDraw DePixelizer (Bitmap-to-Vector) Conversion Utility");
   
@@ -217,16 +221,20 @@ void setup() {
           reloadImage(filePath);
         
   String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
-  newPath = newPath + "\\system\\temp.JPG";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-  storedFile = new File(sketchPath(newPath));  
+  newPath = newPath + "/system/temp.JPG";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
+  storedFile = new File(newPath);  
   if (storedFile.exists()) {
     println("Loading last file used......");//(load instructions gcode?)
     fileSelected(storedFile);
   }else{
      println("No local job file found to load..");
    }
-    surface.setResizable(true);
-  frame.setResizable(true);
+  surface.setResizable(true);
+  // Start maximized-sized so users do not need to click maximize manually.
+  xWindow = displayWidth;
+  yWindow = displayHeight;
+  surface.setSize(xWindow, yWindow);
+  surface.setLocation(0, 0);
   
   //frame.dispose(); why did i do this//....??
 }
@@ -234,6 +242,19 @@ void setup() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){// println(frameRate);
+
+  if (pendingImageLoadFromPicker) {
+      pendingImageLoadFromPicker = false;
+      if (fileLoaded) {
+        imageLoaded = false;
+        reloadImage(filePath);
+        thresholdLow = 0;
+        thresholdHigh = 255;
+        sliderThresholdLow(thresholdLow);
+        sliderThresholdHigh(thresholdHigh);
+        setButtons();
+      }
+  }
 
   if (recordData){
       save("system/Log_DePixelizer.png");
@@ -428,7 +449,7 @@ void draw(){// println(frameRate);
         
         File file = saveFile(destName); // File to be moved (the one the user selected. And if we are in fileCopy then we know its in a different directory)
     
-        File dest = new File(savePath(sketchPath()),"\\system\\temp.svg");// fileName);// use temp so we dont fill up with crap files
+        File dest = new File(savePath(sketchPath()),"system/temp.svg");// fileName);// use temp so we dont fill up with crap files
        
         byte[] source = loadBytes(file);
         saveBytes(dest, source);
@@ -519,7 +540,7 @@ void draw(){// println(frameRate);
   
   drawUI();  // draw instructions to the screen
    
-  if (xWindow != width){ // if  frame.setSize(xWindow, yWindow);
+  if (xWindow != width){ // if  surface.setSize(xWindow, yWindow);
       xWindow = width;
       setButtons();
       imageLoaded=false;
@@ -557,22 +578,15 @@ void fileSelected(File selection) {
       fileNameOriginal = fileName = selection.getName(); //JUST THE NAME, no path
 
       //////////////////////////println("You selected " + filePath );//println("You selected " + filePath ); 
-     // File file = new File(sketchPath("\\system\\fileName"));
+     // File file = new File(sketchPath("system/fileName"));
       //if (file.exists()) {
       //  println("File Found");//println("File Found");
      //   println(filePath);
      // } else {
-        fileCopy();        
+      fileCopy();        
       //} 
       fileLoaded = true;
-      imageLoaded=false;
-      reloadImage(filePath);
-      
-      thresholdLow =0; thresholdHigh=255;  //Resetting buttons 
-
-      sliderThresholdLow(thresholdLow);
-      sliderThresholdHigh(thresholdHigh);      
-      setButtons();
+      pendingImageLoadFromPicker = true;
     } else {
         //fileLoaded = false;
        // imageLoaded=false;
@@ -603,7 +617,7 @@ void fileCopy(){  //If user picks file not located in processing parent folder, 
     File file = saveFile(filePath); // File to be moved (the one the user selected. And if we are in fileCopy then we know its in a different directory)
     
     //This saves the file that will be loaded next time. 
-    File dest = new File(savePath(sketchPath()),"\\system\\temp.JPG");// fileName);// use temp so we dont fill up with crap files
+    File dest = new File(savePath(sketchPath()),"system/temp.JPG");// fileName);// use temp so we dont fill up with crap files
     byte[] source = loadBytes(file);
     saveBytes(dest, source);
     
@@ -1981,10 +1995,10 @@ color colorPicker(color input){
 
 void checkLicense(String inputEmail,String inputKey) {
   boolean bRenewFree = true;
-  File file = new File(sketchPath("\\system\\License.txt"));
+  File file = new File(sketchPath("system/License.txt"));
   if (file.exists()) {
     try {
-      String[] lines = loadStrings("\\system\\License.txt");
+      String[] lines = loadStrings("system/License.txt");
       if (lines != null) { 
         bTerms = true;//a free OR paid license has been found so eula is confirmed 
         bPaid = bTerms;
@@ -2099,7 +2113,7 @@ void checkLicense(String inputEmail,String inputKey) {
 
   if (!bTerms) {
     String termsPath = sketchPath(); 
-    termsPath = termsPath + "\\system\\CYLINDRAW_TERMS_OF_USE.pdf"; 
+    termsPath = termsPath + "/system/CYLINDRAW_TERMS_OF_USE.pdf"; 
     launch(termsPath); 
 
     String title ="TERMS OF USE PROMPT";
@@ -2131,7 +2145,7 @@ void checkLicense(String inputEmail,String inputKey) {
     sKey = "XCg8_XA@RA=yyN4cW4FD"; //This line negates the entire point of licensing. It does make the first time user aggree to pdf but it only asks them on boot until they agree. 
     String storedLicense =sKey + "\n"+ sEmail +"\n"+
       "Use of this license constitutes explicit acceptance of the end user license agreement per CYLINDRAW_TERMS_OF_USE.pdf  \n  " ; // \nPlease DO NOT redistribute CylinDraw Control software or your license keys in any form. \nVisit www.CylinDraw.com to get the latest release. \n  " ;   
-    String licenseName = ("\\system\\License.txt");  
+    String licenseName = ("system/License.txt");  
     String[] storedLicenseList = split(storedLicense, '\n');  //use the \n characters as delineiators to turn the horizontal array into a vertical array.
     saveStrings(licenseName, storedLicenseList);
   }

@@ -70,7 +70,7 @@ void settings() {
   size(displayWidth-50, displayHeight-50);//, P3D);
   //size(xWindow, yWindow);//, P3D); 
   // surface.setSize(xWindow, yWindow);  
-  logoHeaderImg = requestImage("\\system\\logoViewer.png");//loadImage("logo.png"); //Header Image
+  logoHeaderImg = requestImage("system/logoViewer.png");//loadImage("logo.png"); //Header Image
 }
 
 
@@ -82,7 +82,7 @@ void setup() {
   if (yWindow >displayHeight) {
     yWindow = displayHeight-50;
   }
-  frame.setSize(xWindow, yWindow); 
+  surface.setSize(xWindow, yWindow); 
 
   surface.setResizable(true); 
   surface.setLocation(displayWidth/2-width/2, displayHeight/2-height/2); //  surface.setLocation(0,0);
@@ -97,8 +97,8 @@ void setup() {
   //  Other program needs to writte thefilepath to a text file called TEMP 
   
   String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
-  newPath = newPath + "\\system\\temp.JOB.svg";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-  File fileDefault = new File(sketchPath(newPath));
+  newPath = newPath + "/system/temp.JOB.svg";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
+  File fileDefault = new File(newPath);
   
 
    if (fileDefault.exists()) {
@@ -172,7 +172,7 @@ void draw() {
   float downscale = 2.2;   int imgpixelwidth = 1690;int imgpixelheight = 248;
    image(logoHeaderImg, width/2, 45, imgpixelwidth/2/downscale, imgpixelheight/2/downscale);// 500, 500/11.73); //logo header image. The 500 sets the width & the 11.82 number is based on the image size so it has the correct aspect ratio & size when loaded.
   
-  if (xWindow != width){ // if  frame.setSize(xWindow, yWindow);
+  if (xWindow != width){ // if  surface.setSize(xWindow, yWindow);
       setButtons();
       xWindow = width;
     }else if (yWindow != height){
@@ -325,8 +325,8 @@ void scanGcode() {
            "Please remake the file using the CylinDrawJobCreator",
            "Sorry for the inconvience.",
          };
-         frame.setLocation(xWindow/2,yWindow/2);
-         JOptionPane.showMessageDialog(frame, message2, "Error...", JOptionPane.ERROR_MESSAGE);
+         surface.setLocation(xWindow/2,yWindow/2);
+         JOptionPane.showMessageDialog(null, message2, "Error...", JOptionPane.ERROR_MESSAGE);
 
       }else if (loadPathCode.contains(".svg")) {
           Object[] message2 = {
@@ -335,8 +335,8 @@ void scanGcode() {
            "To create a '.JOB.svg' drawing file import the file you just tried to open with CylynDraw JobCreator",
            "For now you can still view it as a regular svg, opening now...",
          };
-         frame.setLocation(xWindow/2,yWindow/2);
-         JOptionPane.showMessageDialog(frame, message2, "Notice", JOptionPane.INFORMATION_MESSAGE);
+         surface.setLocation(xWindow/2,yWindow/2);
+         JOptionPane.showMessageDialog(null, message2, "Notice", JOptionPane.INFORMATION_MESSAGE);
          launch(loadPathCode);
         // PShape thing = loadShape(loadPathCode);
          //shape(thing,0,0); //playing with embedding the original image in for a preview.   

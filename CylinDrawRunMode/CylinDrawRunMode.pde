@@ -289,7 +289,7 @@ boolean openSerialPort() {
 
 
 void selectSerialPort() { //Use selectSerialPor OR isPortActiv but not both (need a settings file2 and have this be an option)
-  String result = (String) JOptionPane.showInputDialog(frame, 
+  String result = (String) JOptionPane.showInputDialog(null, 
     "Select the USB port on your computer that CylinDraw is plugged into.\nIf nothing is shown here make sure it is connected to your computer.", // within port selection window
     "Select USB serial port", //Port selection Window title
     JOptionPane.QUESTION_MESSAGE, 
@@ -330,8 +330,8 @@ void settings() {
   size(displayWidth-50, displayHeight-50);//size(xWindow, yWindow); // cant use p2d beecause buttons ..../7may, changed from default to p2d to run faster
   // fullScreen(P3D);   surface.setResizable(true);  surface.setSize(xWindow, yWindow);
   noSmooth();
-  logoHeaderImg = requestImage("/system/logoRunMode.png");// loadImage("logo.png"); //Header Image
-  logoCalImg = requestImage("/system/logoCalibration.png");
+  logoHeaderImg = requestImage("system/logoRunMode.png");// loadImage("logo.png"); //Header Image
+  logoCalImg = requestImage("system/logoCalibration.png");
 }
 
 void setup() {
@@ -342,9 +342,9 @@ void setup() {
   if (yWindow >displayHeight) {
     yWindow = displayHeight-50;
   }
-  frame.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
-  frame.setLocation(displayWidth/2-width/2, displayHeight/2-height/2);  
-  frame.setTitle("CylinDraw -RUN MODE-");//or surface. 
+  surface.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
+  surface.setLocation(displayWidth/2-width/2, displayHeight/2-height/2);  
+  surface.setTitle("CylinDraw -RUN MODE-");//or surface. 
 
   RG.init(this); //must remain in setup!
   RG.ignoreStyles(false);
@@ -356,12 +356,12 @@ void setup() {
   checkLicense("", "");
   setButtons();
 
-  frame.setTitle("CylinDraw -RUN MODE-"); 
+  surface.setTitle("CylinDraw -RUN MODE-"); 
 
 
   String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
   newPath = newPath + "/system/temp.JOB.svg";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-  storedFile = new File(sketchPath(newPath));  
+  storedFile = new File(newPath);  
 
   if (storedFile.exists()) {
     DisplayData("Loading last file used......");//(load instructions gcode?)
@@ -372,7 +372,7 @@ void setup() {
 
   frameRate(60);
   surface.setResizable(true);
-  frame.setResizable(true);
+  surface.setResizable(true);
 }//end of SETUP
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -502,7 +502,7 @@ void draw() {
     }else{ text("(No Job Preview.)", width/2, 200);}
   } //this was a loading message but if you load a regular svg it stays there..
 
-  if (xWindow != width) {   // if  frame.setSize(xWindow, yWindow);
+  if (xWindow != width) {   // if  surface.setSize(xWindow, yWindow);
     xWindow = width;
     //bSliderLock = true;
     setButtons();
@@ -663,7 +663,7 @@ void fileCopy() {  //If user picks file not located in processing parent folder,
   /////////////////////fileName = fileName.replace(".svg",""); fileName = fileName + "-COPY" + str( (int)( random(9999) ) ) +".svg"; ///Option to extend the file name. Would only do this if it was a true file COPY instead of a move. which I cant figure out
 
   //This saves the file that will be loaded next time. 
-  File dest = new File(savePath(sketchPath()), "/system/temp.JOB.svg"); //always temp so it overwrites the previous temp
+  File dest = new File(savePath(sketchPath()),"system/temp.JOB.svg"); //always temp so it overwrites the previous temp
   byte[] source = loadBytes(file);
   saveBytes(dest, source);
 
@@ -1408,7 +1408,7 @@ void buttonExit() {
   String title ="Exit program?";
   String message = "Are you sure you want to exit the program?";
   //frame.setAlwaysOnTop(true);
-  frame.setLocation(xWindow/2, yWindow/2);
+  surface.setLocation(xWindow/2, yWindow/2);
   int option = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
   if (option == JOptionPane.OK_OPTION) { 
     buttonKillJob();
@@ -2319,10 +2319,10 @@ void buttonTest5() {
 
 void checkLicense(String inputEmail, String inputKey) {
   boolean bRenewFree = true;
-  File file = new File(sketchPath("/system/License.txt"));
+  File file = new File(sketchPath("system/License.txt"));
   if (file.exists()) {
     try {
-      String[] lines = loadStrings("/system/License.txt");
+      String[] lines = loadStrings("system/License.txt");
       if (lines != null) { 
         bTerms = true;//a free OR paid license has been found so eula is confirmed 
 
@@ -2490,7 +2490,7 @@ void checkLicense(String inputEmail, String inputKey) {
     sKey = "XCg8_XA@RA=yyN4cW4FD"; //This line negates the entire point of licensing. It does make the first time user aggree to pdf but it only asks them on boot until they agree.
     String storedLicense =sKey + "\n"+ sEmail +"\n"+
       "Use of this license constitutes explicit acceptance of the end user license agreement per CYLINDRAW_TERMS_OF_USE.pdf \nPlease DO NOT redistribute CylinDraw Control software or your license keys in any form. \nVisit www.CylinDraw.com to get the latest release. \n  " ;   
-    String licenseName = ("/system/License.txt");  
+    String licenseName = ("system/License.txt");  
     String[] storedLicenseList = split(storedLicense, '\n');  //use the \n characters as delineiators to turn the horizontal array into a vertical array.
     saveStrings(licenseName, storedLicenseList);
   }
@@ -2509,7 +2509,7 @@ void logWrite(boolean bAppend) {//commit softlog to hardlog. (without append it 
   String sLogTemp=" ";
   String[] sLogArray;
   if (bAppend) {
-    sLogArray = loadStrings("/system/LogRunMode.txt");
+    sLogArray = loadStrings("system/LogRunMode.txt");
     sLogTemp = join(sLogArray, "\n");
   } else {
     sLogTemp="Note: for this log to properly record data you must exit the program using the EXIT button to give it the chance to log the data. \n  ";
@@ -2523,7 +2523,7 @@ void logWrite(boolean bAppend) {//commit softlog to hardlog. (without append it 
 }
 void logRead() {//overwrite softlog with hardlog  
   sLog ="";
-  String[] sLogArray = loadStrings("/system/LogRunMode.txt");
+  String[] sLogArray = loadStrings("system/LogRunMode.txt");
   sLog = join(sLogArray, "\n");
 }
 

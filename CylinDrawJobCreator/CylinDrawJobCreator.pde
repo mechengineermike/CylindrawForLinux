@@ -162,17 +162,17 @@ int yWindow = 900;
 void settings() {
    size(displayWidth-50, displayHeight-50, P3D); //p3d necessary because we rotate the image & use camera, but need to switrch to p2d to render faster and more accurately!. Do not attempt fullscreen. // fullScreen(P3D);   //.setResizable(true);////surface.setSize(xWindow, yWindow);surface.setLocation(0,0);
    noSmooth(); //Not sure why I said yes but smooothing does slow things down... //YES WE DO WANT TO SMOOTH AFTER DONE TROUBLESHOOTING LATER
-   logoHeaderImg = requestImage("\\system\\logoJobCreator.png");//loadImage("logo.png"); //Header Image
+   logoHeaderImg = requestImage("system/logoJobCreator.png");//loadImage("logo.png"); //Header Image
 }
 
 
 void setup(){
   hint(DISABLE_OPENGL_ERRORS);     hint(DISABLE_TEXTURE_MIPMAPS); //Both of these are meant to speed up rendering.   //hint(ENABLE_STROKE_PERSPECTIVE);
-  //frame.setLocation(0,0);
+  //surface.setLocation(0,0);
   if (xWindow >displayWidth){xWindow = displayWidth-50;}
   if (yWindow >displayHeight){yWindow = displayHeight-50;}
-  frame.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
-  frame.setLocation(displayWidth/2-width/2,displayHeight/2-height/2);  
+  surface.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
+  surface.setLocation(displayWidth/2-width/2,displayHeight/2-height/2);  
   
   RG.init(this); //must remain in setup!
   RG.ignoreStyles(ignoringStyles);
@@ -182,7 +182,7 @@ void setup(){
      //UNIFORMSTEP segmentator is the fastest segmentator and it segments the curve based on a constant value of the step of the curve parameter, or on the number of segments wanted.  This can be useful when segmpointsentating very often a Shape or when we know the amount of segments necessary for our specific application.
      //RG.setPolygonizer(RG.UNIFORMSTEP); //uniformSTEP is faster, as long as its detailed enough on the curves then yay! (uniform length is the slowest!) might be a matter of slicing speed vs quality have to time.
      //RG.setPolygonizerAngle(0.065);// something to experiment with
-  frame.setTitle("CylinDraw -CREATION MODE-"); 
+  surface.setTitle("CylinDraw -CREATION MODE-"); 
   stroke(0);
   noFill();
   
@@ -193,8 +193,8 @@ void setup(){
   setButtons();
   
   String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
-  newPath = newPath + "\\system\\temp.svg";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-  storedFile = new File(sketchPath(newPath));  
+  newPath = newPath + "/system/temp.svg";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
+  storedFile = new File(newPath);  
   if (storedFile.exists()) {
     DisplayData("Loading last file used......");//(load instructions gcode?)
     fileSelected(storedFile);
@@ -211,7 +211,7 @@ void setup(){
   colorArray = new color[101]; //(0-100 inclusive)
   frameRate(60);
   surface.setResizable(true);
-  frame.setResizable(true);
+  surface.setResizable(true);
 }//End of Setup
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +219,7 @@ void setup(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
     //yWindow = yWindow-1;
-    //frame.setSize(xWindow,yWindow);
+    //surface.setSize(xWindow,yWindow);
 
     beginCamera();
     camera(); //This sets translate commands to affect where the camera looks!
@@ -389,7 +389,7 @@ void draw(){
         }
       
     // if ( bSaveFile && shapeLoaded ){bSaveFile = false;  saveFile();  }  //load a second time becase all info is pulled for the save file command when used
-    if (xWindow != width){ // if  frame.setSize(xWindow, yWindow);
+    if (xWindow != width){ // if  surface.setSize(xWindow, yWindow);
       xWindow = width;
       setButtons();
     }else if (yWindow != height){
@@ -629,9 +629,9 @@ void saveFile(){
         }else{ //same but excl svg
               //PImage img1; //too big
               //PShape img1;
-              //img1 = loadImage("\\system\\temp.svg"); 
-              //img1 = requestImage("\\system\\temp.svg");
-               //img1 = loadShape("\\system\\temp.svg"); 
+              //img1 = loadImage("system/temp.svg"); 
+              //img1 = requestImage("system/temp.svg");
+               //img1 = loadShape("system/temp.svg"); 
                //svg.image(img1,100,100);
                //  shape(bot, 110, 90, 100, 100);  // Draw at coordinate (110, 90) at size 100 x 100
               //shape(bot, 280, 40);            // Draw at coordinate (280, 40) at the default size
@@ -709,7 +709,7 @@ void saveFile(){
             //float textSpacing = RealHeight/toolDia/10;//20 is general.
             
             //svg.textSize(textSize);
-            String[] storedSettingsList = loadStrings("\\system\\CupTool_LastUsed.txt");//loading words to display over svg
+            String[] storedSettingsList = loadStrings("system/CupTool_LastUsed.txt");//loading words to display over svg
             int offsett = 1; //bigger number = more dist from top
             int spacing =textSize;
             svg.text("Created with CylinDraw JobCreator",5,-Ymax+spacing +offsett);
@@ -793,7 +793,7 @@ void saveFile(){
                   //"Job file was saved to this folder:  ",
                   //"  " + sketchPath(),
                  };
-                JOptionPane.showMessageDialog(frame, message2, "File Saved!", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, message2, "File Saved!", JOptionPane.INFORMATION_MESSAGE);
                 frame12.setVisible(false);
                 frame12.toBack();
                 frame12.dispose();
@@ -820,8 +820,8 @@ void saveFile(){
             iMaxNumColors = 0;
             iMaxChildCounter = 0;
             String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
-            newPath = newPath + "\\system\\temp.svg";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-            storedFile = new File(sketchPath(newPath));  
+            newPath = newPath + "/system/temp.svg";   //.replace("CylinDrawJobCreator", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
+            storedFile = new File(newPath);  
             if (storedFile.exists()) {
               //DisplayData("Reoading last file used......");//(load instructions gcode?)
               fileSelected(storedFile);
@@ -908,7 +908,7 @@ void fileSelected(File selection) {
       //filePath = filePath.replace("\" + fileName,"");
       //filePath = dataPath(filePath);
       //String filePath = selection.getPath() ;
-     // File file = new File(sketchPath("\\system\\" +fileName));
+     // File file = new File(sketchPath("system/" +fileName));
       //if (file.exists()) {
        // DisplayData("File Found");
         ////filePath = file.getAbsolutePath();
@@ -994,7 +994,7 @@ void launchViewer(File selectedFile){
        // newPath = newPath.replace("CylinDrawJobCreator", "CylinDrawRunMode");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
         //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
         
-        File dest1 = new File(savePath(newPath),"\\system\\temp.JOB.svg");// fileName);// use temp so we dont fill up with crap files
+        File dest1 = new File(savePath(newPath),"system/temp.JOB.svg");// fileName);// use temp so we dont fill up with crap files
          
         byte[] source1 = loadBytes(selectedFile);
         saveBytes(dest1, source1);
@@ -1003,7 +1003,7 @@ void launchViewer(File selectedFile){
         newPath = newPath.replace("CylinDrawRunMode", "CylinDrawViewer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
         //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
         
-        File dest = new File(savePath(newPath),"\\system\\temp.JOB.svg");// fileName);// use temp so we dont fill up with crap files
+        File dest = new File(savePath(newPath),"system/temp.JOB.svg");// fileName);// use temp so we dont fill up with crap files
          
         byte[] source = loadBytes(selectedFile);
         saveBytes(dest, source);
@@ -1028,7 +1028,7 @@ void fileCopy(){  //If user picks file not located in processing parent folder, 
   ////////////////////////////////////////////////////////////fileName = fileName.replace(".svg",""); fileName = fileName + "-COPY" + str( (int)( random(9999) ) ) +".svg"; ///Option to extend the file name. Would only do this if it was a true file COPY instead of a move. which I cant figure out
   
   //This saves the file that will be loaded next time. 
-  File dest = new File(savePath(sketchPath()),"\\system\\temp.svg");// fileName);// use temp so we dont fill up with crap files
+  File dest = new File(savePath(sketchPath()),"system/temp.svg");// fileName);// use temp so we dont fill up with crap files
   byte[] source = loadBytes(file);
   saveBytes(dest, source);//BE VERY CAREFUL WITH YOUR FILEPATHS. THIS PROGRAM CAN BLUESCREEN YOUR PC IF YOU MESS UP.
     
@@ -1136,10 +1136,10 @@ void enterCupDimensions(){// this is the future nice interface   google  JOption
 
 void checkLicense(String inputEmail,String inputKey) {
   boolean bRenewFree = true;
-  File file = new File(sketchPath("\\system\\License.txt"));
+  File file = new File(sketchPath("system/License.txt"));
   if (file.exists()) {
     try {
-      String[] lines = loadStrings("\\system\\License.txt");
+      String[] lines = loadStrings("system/License.txt");
       if (lines != null) { 
         bTerms = true;//a free OR paid license has been found so eula is confirmed 
         
@@ -1255,7 +1255,7 @@ void checkLicense(String inputEmail,String inputKey) {
 
   if (!bTerms) {
     String termsPath = sketchPath(); 
-    termsPath = termsPath + "\\system\\CYLINDRAW_TERMS_OF_USE.pdf"; 
+    termsPath = termsPath + "/system/CYLINDRAW_TERMS_OF_USE.pdf"; 
     launch(termsPath); 
 
     String title ="TERMS OF USE PROMPT";
@@ -1474,11 +1474,11 @@ void loadSettings(String sCupToolFile){ //open CupTool_LastUsed 'settings.txt'. 
   plotxShift=0;  //leave at zero so its centered
   plotyShift = int(0+plotScale*Ymax*.5-height/2+200);
   sCupToolFile=sCupToolFile.replace(".txt","");//remove in case it was already here
-  sCupToolFile = "\\system\\"+sCupToolFile+".txt";
-  File file = new File(sketchPath(sCupToolFile));//"\\system\\CupTool_LastUsed.txt"));
+  sCupToolFile = "system/"+sCupToolFile+".txt";
+  File file = new File(sketchPath(sCupToolFile));//"/system/CupTool_LastUsed.txt"));
     if (file.exists()) {
      try{
-        String[] lines = loadStrings(sCupToolFile);//"\\system\\CupTool_LastUsed.txt");
+        String[] lines = loadStrings(sCupToolFile);//"/system/CupTool_LastUsed.txt");
         if (lines != null){
           sToolProfile= lines[0]; //update the global variable!
           cupType = int(lines[2]);//The zero line is the header line so we skip it. & there are note lines so we skip every other line 
@@ -2827,7 +2827,7 @@ void logWrite(boolean bAppend){//commit softlog to hardlog. (without append it w
     String sLogTemp=" ";
     String[] sLogArray;
     if (bAppend){
-      sLogArray = loadStrings("\\system\\LogJobCreator.txt");
+      sLogArray = loadStrings("system/LogJobCreator.txt");
       sLogTemp = join(sLogArray,"\n");
     }else{
       sLogTemp="Note: for this log to properly record data you must exit the program using the EXIT button so give it the chance to log the data. \n  ";
@@ -2841,6 +2841,6 @@ void logWrite(boolean bAppend){//commit softlog to hardlog. (without append it w
 }
 void logRead(){//overwrite softlog with hardlog  
     sLog ="";
-    String[] sLogArray = loadStrings("\\system\\LogJobCreator.txt");
+    String[] sLogArray = loadStrings("system/LogJobCreator.txt");
     sLog = join(sLogArray,"\n");
 }
