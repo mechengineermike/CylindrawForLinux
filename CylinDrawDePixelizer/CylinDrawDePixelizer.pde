@@ -208,7 +208,6 @@ void setup() {
   if (xWindow >displayWidth){xWindow = displayWidth-50;}
   if (yWindow >displayHeight){ yWindow= displayHeight-50;}
   surface.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
-  surface.setLocation(displayWidth/2-width/2,displayHeight/2-height/2); 
   
   surface.setTitle("CylinDraw DePixelizer (Bitmap-to-Vector) Conversion Utility");
   
@@ -234,7 +233,6 @@ void setup() {
   xWindow = displayWidth;
   yWindow = displayHeight;
   surface.setSize(xWindow, yWindow);
-  surface.setLocation(0, 0);
   
   //frame.dispose(); why did i do this//....??
 }
@@ -1173,6 +1171,18 @@ void buttonHelp() {
 void buttonProgConvert(){println("You are currently using DePixelizer Mode.");}
     
 
+void launchSiblingApp(String appFolderName){
+  try{
+    File currentAppDir = new File(sketchPath());
+    File suiteRootDir = currentAppDir.getParentFile();
+    File targetAppDir = new File(suiteRootDir, appFolderName);
+    String launchCmd = "cd \"" + targetAppDir.getAbsolutePath() + "\" && ./" + appFolderName;
+    Runtime.getRuntime().exec(new String[]{"/bin/bash", "-lc", launchCmd});
+  }catch(Exception e){
+    JOptionPane.showMessageDialog(null, "Unable to launch app: " + appFolderName + "\n" + e.getMessage(), "Launch Error", JOptionPane.ERROR_MESSAGE);
+  }
+}
+
 
 
 void buttonProgCreate(){ 
@@ -1185,12 +1195,7 @@ void buttonProgCreate(){
   //frame3.setLocation(xWindow/2,yWindow/2);
   int option = JOptionPane.showConfirmDialog(null, message,title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
   if (option == JOptionPane.OK_OPTION){ 
-      String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
-      //newPath = newPath.replace("CylinDrawRunMode", "");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-        //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
-      newPath = newPath.replace("CylinDrawDePixelizer", "CylinDrawJobCreator");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-      newPath = "cd " + newPath + "&& CylinDrawJobCreator.exe";
-      launch(newPath); 
+      launchSiblingApp("CylinDrawJobCreator");
       exit();   
   }
   if (option == JOptionPane.CANCEL_OPTION){ println(">User Clicked Cancel.<");  }
@@ -1209,12 +1214,7 @@ void buttonProgRun(){
   //frame3.setLocation(xWindow/2,yWindow/2);
   int option = JOptionPane.showConfirmDialog(null, message,title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
   if (option == JOptionPane.OK_OPTION){ 
-      String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.       
-      //newPath = newPath.replace("CylinDrawRunMode", "");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-        //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
-      newPath = newPath.replace("CylinDrawDePixelizer", "CylinDrawRunMode");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-      newPath = "cd " + newPath + "&& CylinDrawRunMode.exe";
-      launch(newPath); 
+      launchSiblingApp("CylinDrawRunMode");
       exit();   
   }
   if (option == JOptionPane.CANCEL_OPTION){  println(">User Clicked Cancel.<");  }

@@ -1,4 +1,17 @@
 Note: for this log to properly record data you must exit the program using the EXIT button so give it the chance to log the data. 
-  Ver: 2.01 @ JobCreator CylinDraw Control Suite.
- Current Time in ms: 1645380501504
+  Ver: 2.02 @ JobCreator CylinDraw Control Suite.
+ Current Time in ms: 1778887950336
+ Default cup dimensions loaded using previous settings.
+Loading last file used......
+Importing FileName: temp.svg
+Located at FilePath:/home/pi/IchorGAT/CylinDrawForLinux/CylinDrawJobCreator/system/temp.svg
+Loaded filesize in bytes=233908
+~~Detected that this SVG was generated using CylinDraw Depixelizer!
+~~Detected the Stroke Width is: 0.5
+~~(The system will not let you change stroke width within JobCeator on an SVG from Depixelizer.)
+~~Detected number of unique colors was: 2
+~~Detected stroke overlap was: 50.0%
+You clicked the '￿' key
+You clicked the '￿' key
+Current Time in ms: 1778888081408
 

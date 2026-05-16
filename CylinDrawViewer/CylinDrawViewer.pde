@@ -67,7 +67,7 @@ PImage logoHeaderImg;
 boolean allowLoad = false;
 
 void settings() {
-  size(displayWidth-50, displayHeight-50);//, P3D);
+  size(displayWidth-10, displayHeight-140);//, P3D);
   //size(xWindow, yWindow);//, P3D); 
   // surface.setSize(xWindow, yWindow);  
   logoHeaderImg = requestImage("system/logoViewer.png");//loadImage("logo.png"); //Header Image
@@ -76,16 +76,10 @@ void settings() {
 
 void setup() {
   cursor (HAND);
-  if (xWindow >displayWidth) {
-    xWindow = displayWidth-50;
-  }
-  if (yWindow >displayHeight) {
-    yWindow = displayHeight-50;
-  }
-  surface.setSize(xWindow, yWindow); 
-
-  surface.setResizable(true); 
-  surface.setLocation(displayWidth/2-width/2, displayHeight/2-height/2); //  surface.setLocation(0,0);
+  surface.setSize(displayWidth-10, displayHeight-140);
+  xWindow = width;
+  yWindow = height;
+  surface.setResizable(true);
 
   //background(0,0);
   background(160, 219, 232);
@@ -671,7 +665,12 @@ void buttonExit(){
   //frame3.setAlwaysOnTop(true);
   frame3.setLocation(xWindow/2,yWindow/2);
   int option = JOptionPane.showConfirmDialog(null, message,title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-  if (option == JOptionPane.OK_OPTION){ exit();  }
+  if (option == JOptionPane.OK_OPTION){
+    if (gui != null) gui.dispose();
+    exit();
+    // Fallback for cases where Processing exit does not close cleanly on Linux/JOGL.
+    java.lang.System.exit(0);
+  }
   if (option == JOptionPane.CANCEL_OPTION){  
     //DisplayData(">User Clicked Cancel.<");  
       frame3.setVisible(false);

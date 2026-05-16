@@ -155,12 +155,16 @@ int speed = 10; //sometihing to do with the number of frames shown per cycle
 int blending = MULTIPLY;         // DARKEST, MULTIPLY, BLEND , ...
 int xWindow = 1200;
 int yWindow = 900; 
+boolean windowSizeDiagPrinted = false;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //SETUP TAB
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void settings() {
-   size(displayWidth-50, displayHeight-50, P3D); //p3d necessary because we rotate the image & use camera, but need to switrch to p2d to render faster and more accurately!. Do not attempt fullscreen. // fullScreen(P3D);   //.setResizable(true);////surface.setSize(xWindow, yWindow);surface.setLocation(0,0);
+   int dW = max(displayWidth, displayHeight);
+   int dH = min(displayWidth, displayHeight);
+   println("[WindowDiag] settings request: " + (dW-1) + "x" + (dH-40) + " display=" + displayWidth + "x" + displayHeight);
+   size(dW-1, dH-40, P3D); //orientation-safe: always treat larger axis as width on Linux startup
    noSmooth(); //Not sure why I said yes but smooothing does slow things down... //YES WE DO WANT TO SMOOTH AFTER DONE TROUBLESHOOTING LATER
    logoHeaderImg = requestImage("system/logoJobCreator.png");//loadImage("logo.png"); //Header Image
 }
@@ -169,10 +173,14 @@ void settings() {
 void setup(){
   hint(DISABLE_OPENGL_ERRORS);     hint(DISABLE_TEXTURE_MIPMAPS); //Both of these are meant to speed up rendering.   //hint(ENABLE_STROKE_PERSPECTIVE);
   //surface.setLocation(0,0);
-  if (xWindow >displayWidth){xWindow = displayWidth-50;}
-  if (yWindow >displayHeight){yWindow = displayHeight-50;}
-  surface.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
-  surface.setLocation(displayWidth/2-width/2,displayHeight/2-height/2);  
+  //if (xWindow >displayWidth){xWindow = displayWidth-50;}
+  //if (yWindow >displayHeight){yWindow = displayHeight-50;}
+  //surface.setSize(xWindow, yWindow); //THIS CAN BE USED TO RESIZE THE WINDOW HERE by loading from a file
+  //surface.setLocation(displayWidth/2-width/2,displayHeight/2-height/2);
+  xWindow = width;
+  yWindow = height;
+  println("[WindowDiag] setup actual: " + width + "x" + height + " tracked=" + xWindow + "x" + yWindow);
+  
   
   RG.init(this); //must remain in setup!
   RG.ignoreStyles(ignoringStyles);
@@ -210,14 +218,16 @@ void setup(){
   previewShape = new RShape();
   colorArray = new color[101]; //(0-100 inclusive)
   frameRate(60);
-  surface.setResizable(true);
-  surface.setResizable(true);
 }//End of Setup
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //DRAW-VIEWER SCALING-TAB
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
+    if (!windowSizeDiagPrinted && frameCount > 30){
+      windowSizeDiagPrinted = true;
+      println("[WindowDiag] draw@30 actual: " + width + "x" + height + " tracked=" + xWindow + "x" + yWindow + " display=" + displayWidth + "x" + displayHeight);
+    }
     //yWindow = yWindow-1;
     //surface.setSize(xWindow,yWindow);
 
@@ -1018,8 +1028,7 @@ void launchViewer(File selectedFile){
            launch(filePath);
         }else{
            DisplayData(".JOB.svg file found. Loading preview.");
-           newPath = "cd " + newPath + "&& CylinDrawViewer.exe";
-           launch(newPath); 
+           launchSiblingApp("CylinDrawViewer");
         }
 }
 
@@ -1872,7 +1881,18 @@ void buttonHelp() {
   frame33.dispose();  
 }
 
- 
+void launchSiblingApp(String appFolderName){
+  try{
+    File currentAppDir = new File(sketchPath());
+    File suiteRootDir = currentAppDir.getParentFile();
+    File targetAppDir = new File(suiteRootDir, appFolderName);
+    String launchCmd = "cd \"" + targetAppDir.getAbsolutePath() + "\" && ./" + appFolderName;
+    Runtime.getRuntime().exec(new String[]{"/bin/bash", "-lc", launchCmd});
+  }catch(Exception e){
+    JOptionPane.showMessageDialog(null, "Unable to launch app: " + appFolderName + "\n" + e.getMessage(), "Launch Error", JOptionPane.ERROR_MESSAGE);
+  }
+}
+
 void buttonProgConvert(){
   String title ="Switch to DePixelizer Mode?";
   String message = "Are you sure you want to switch to DePixelizer Mode? (The currently loaded job will be reset.)";
@@ -1881,12 +1901,7 @@ void buttonProgConvert(){
   frame3.toFront();
   int option = JOptionPane.showConfirmDialog(null, message,title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
   if (option == JOptionPane.OK_OPTION){ 
-      String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.       
-      //newPath = newPath.replace("CylinDrawRunMode", "");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-        //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
-      newPath = newPath.replace("CylinDrawJobCreator", "CylinDrawDePixelizer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-      newPath = "cd " + newPath + "&& CylinDrawDePixelizer.exe";
-      launch(newPath); 
+      launchSiblingApp("CylinDrawDePixelizer");
       logWrite(true);//commit entire log to txt file
       exit();   
   }
@@ -1908,13 +1923,7 @@ void buttonProgRun(){
   frame3.toFront();
   int option = JOptionPane.showConfirmDialog(null, message,title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
   if (option == JOptionPane.OK_OPTION){ 
-      String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
-         
-      //newPath = newPath.replace("CylinDrawRunMode", "");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-        //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
-      newPath = newPath.replace("CylinDrawJobCreator", "CylinDrawRunMode");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-      newPath = "cd " + newPath + "&& CylinDrawRunMode.exe";
-      launch(newPath); 
+      launchSiblingApp("CylinDrawRunMode");
       logWrite(true);//commit entire log to txt file
       exit();   
   }

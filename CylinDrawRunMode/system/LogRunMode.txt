@@ -1,23 +1,4 @@
 Note: for this log to properly record data you must exit the program using the EXIT button to give it the chance to log the data. 
   Version: 2.01 @ RunMode CylinDraw Control Suite
- Current Time in ms: 1645103153152
- Loading last file used......
-Loading file: C:\Users\meche\Desktop\Radiant Artifacts\MECHANICAL\Cup Plotter\CODE\CylinDrawRunMode\system\temp.JOB.svg
-Loaded filesize in bytes=3243330
-! Imported job size is large...program will hide preview to prevent lagging. 
-! (You can change the preview setting in the HELP menu.)
-File Loaded Successfully.
-No responce on port: 
-Testing connection on port:  COM4
- 
-~Machine Connected! FW Revision = V2.00  
-
-G50 S20
-~Speed is: 20.00 mm/sec@G50 S20;
-G51 A100
-~Acceleration is: 100.00 mm/sec/sec@G51 A100;
-G99
-Job is already paused.
-Paused Running Task & Killed Motors! (Set home to re-enable) 
-Current Time in ms: 1645103153152
+ Current Time in ms: 1778886377472
 

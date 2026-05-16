@@ -2,6 +2,7 @@ import javax.swing.*; //fopr the jtextfield
 
 import java.awt.event.KeyEvent;
 import processing.serial.*;
+import processing.awt.PSurfaceAWT;
 import java.io.*;
 import controlP5.*;
 import processing.svg.*;
@@ -71,7 +72,7 @@ Button buttonTest5;
 int xWindow = 1200;
 int yWindow = 900; 
 
-Serial myPort = null;
+processing.serial.Serial myPort = null;
 String command;
 
 RShape Rpreview;
@@ -84,7 +85,7 @@ int fileSize =0; //size of input file in bytes. Used to prevent trying to load p
 boolean bFastPreview=false;//set to true to reduce laggy large files
 
 int myPortIndex = 0; //Set for your desired port.
-String portName = "/dev/ttyUSB0";//"No USB Device found yet...";// searching now...."; // select and modify the appropriate line for your operating system. Leave as null to use interactive port 
+String portName = null;// auto-select from Serial.list() by default on Linux
 //String portName = Serial.list()[0]; // Mac OS X, //String portName = "/dev/ttyUSB0"; // Linux, //String portName = "COM6"; // Windows- specific port
 
 String[] cmdQue  =new String[500];
@@ -152,7 +153,7 @@ void isPortActive() {
     bOKtoSend=true;
   };
 
-  String[] ports = Serial.list();
+  String[] ports = processing.serial.Serial.list();
   if (ports.length == 0) {
     if (bConnected && ! bDumbNotif) {
       // bManual = false;
@@ -186,11 +187,17 @@ void isPortActive() {
     bConnected = false; 
     bRun = false; 
     return;//getting here means no match!
-  } else if (!bManual) { //try to connect   //
-    //
-    for (int jj=int(random(0, ports.length)); jj<ports.length; jj++) { //this part is important. For every serial device found we hold its portname and check if it connects at our unusual baud rate via openSerialPor. This should work on any platform...
-      String result = Serial.list()[jj];
+  } else if (!bManual) { //try to connect
+    int start = int(random(0, ports.length));
+    for (int step=0; step<ports.length; step++) {
+      int jj = (start + step) % ports.length;
+      String result = processing.serial.Serial.list()[jj];
       if (result != null) {
+        // Prefer common Linux USB serial device names first.
+        String lower = result.toLowerCase();
+        if (!(lower.contains("ttyusb") || lower.contains("ttyacm"))) {
+          continue;
+        }
         portName = result;
 
         if (bVerbose)DisplayData("Testing connection on port:  " + result);
@@ -234,7 +241,7 @@ boolean openSerialPort() {
       myPort.stop(); 
       bConnected = false;
     }
-    myPort = new Serial(this, portName, 40000); // 9600); //115200 76800 baud, 38400
+    myPort = new processing.serial.Serial(this, portName, 40000); // 9600); //115200 76800 baud, 38400
     myPort.bufferUntil(';'); //calls serialEvnt when this character is found
     bConnected = true;
     /*
@@ -294,7 +301,7 @@ void selectSerialPort() { //Use selectSerialPor OR isPortActiv but not both (nee
     "Select USB serial port", //Port selection Window title
     JOptionPane.QUESTION_MESSAGE, 
     null, 
-    Serial.list(), 
+    processing.serial.Serial.list(), 
     0);
   if (result != null) {
     portName = result;
@@ -373,7 +380,34 @@ void setup() {
   frameRate(60);
   surface.setResizable(true);
   surface.setResizable(true);
+  maximizeWindow();
 }//end of SETUP
+
+void maximizeWindow() {
+  try {
+    Object nativeWindow = surface.getNative();
+    if (nativeWindow == null) {
+      return;
+    }
+    try {
+      java.lang.reflect.Method maximizeMethod = nativeWindow.getClass().getMethod("setMaximized", boolean.class, boolean.class);
+      maximizeMethod.invoke(nativeWindow, true, true);
+      return;
+    } catch (Exception ignored) {
+      // Not a NEWT/OpenGL window type, try AWT path below.
+    }
+    if (nativeWindow instanceof PSurfaceAWT.SmoothCanvas) {
+      PSurfaceAWT.SmoothCanvas canvas = (PSurfaceAWT.SmoothCanvas) nativeWindow;
+      java.awt.Frame frame = (java.awt.Frame) canvas.getFrame();
+      if (frame != null) {
+        frame.setExtendedState(frame.getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH);
+        frame.setLocation(0, 0);
+      }
+    }
+  } catch (Exception e) {
+    println("Window maximize request failed: " + e.getMessage());
+  }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //DRAW
@@ -1311,6 +1345,18 @@ void mouseWheel(MouseEvent event){
  }
  } */
 
+void launchSiblingApp(String appFolderName) {
+  try {
+    File currentAppDir = new File(sketchPath());
+    File suiteRootDir = currentAppDir.getParentFile();
+    File targetAppDir = new File(suiteRootDir, appFolderName);
+    String launchCmd = "cd \"" + targetAppDir.getAbsolutePath() + "\" && ./" + appFolderName;
+    Runtime.getRuntime().exec(new String[]{"/bin/bash", "-lc", launchCmd});
+  } catch (Exception e) {
+    JOptionPane.showMessageDialog(null, "Unable to launch app: " + appFolderName + "\n" + e.getMessage(), "Launch Error", JOptionPane.ERROR_MESSAGE);
+  }
+}
+
 void buttonProgConvert() {
   String title ="Switch to DePixelizer Mode?";
   String message = "Are you sure you want to switch to DePixelizer Mode? (The currently loaded job will be reset.)";
@@ -1321,12 +1367,7 @@ void buttonProgConvert() {
   frame3.setLocation(xWindow/2, yWindow/2);
   int option = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
   if (option == JOptionPane.OK_OPTION) { 
-    String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.       
-    //newPath = newPath.replace("CylinDrawRunMode", "");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-    //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
-    newPath = newPath.replace("CylinDrawRunMode", "CylinDrawDePixelizer");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-    newPath = "cd " + newPath + "&& CylinDrawDePixelizer.exe";
-    launch(newPath); 
+    launchSiblingApp("CylinDrawDePixelizer");
     logWrite(true);//commit entire log to txt file
     exit();
   }
@@ -1371,12 +1412,7 @@ void buttonProgCreate() {
   frame3.setLocation(xWindow/2, yWindow/2);
   int option = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
   if (option == JOptionPane.OK_OPTION) { 
-    String newPath = sketchPath(); //sketch patch expludes the name of this sketch, it is just the folders leadin gup to it and the master group folder is "CylinDraw" Sub folders & programs have set names.
-    //newPath = newPath.replace("CylinDrawRunMode", "");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-    //this is the target format = launch("cd C:/Sketch/application.windows64 && Sketch.exe");
-    newPath = newPath.replace("CylinDrawRunMode", "CylinDrawJobCreator");//\\CylinDrawViewer.exe"); //have to use 2 backslashes to get processing to understand that just 1 backslash is there
-    newPath = "cd " + newPath + "&& CylinDrawJobCreator.exe";
-    launch(newPath); 
+    launchSiblingApp("CylinDrawJobCreator");
     logWrite(true);//commit entire log to txt file
     exit();
   }
@@ -1780,7 +1816,7 @@ boolean checkAny() {
 }
 
 
-void serialEvent(Serial p) { //This function displays serial data returned from the arduino. Is called when recieving special characters
+void serialEvent(processing.serial.Serial p) { //This function displays serial data returned from the arduino. Is called when recieving special characters
   bProvenConnection = true;
   try {    
     if (checkComplete()) {
@@ -1973,27 +2009,10 @@ void mouseClicked() {
       if (bVerbose)DisplayData("You clicked on the preview, opening detailed job viewer!");
       logHold("You clicked on the preview, opening detailed job viewer!\n");
       try {
-        String localPath = sketchPath();
-        localPath = localPath.replace("CylinDrawRunMode", "CylinDrawViewer");
-
-        //File dest1 = new File(savePath(localPath), "\\system\\temp.JOB.svg");// fileName);// use temp so we dont fill up with crap files
-        //byte[] source1 = loadBytes(storedFile);//// not sure why this was here but it existed on release 1
-        //saveBytes(dest1, source1);
-        //filePath = dest1.getAbsolutePath();
-        //fileName = dest1.getName();
-
         filePath = storedFile.getAbsolutePath();
         fileName = storedFile.getName();
-
-        //boolean success = dest1.exists(); 
-        //if (!success) {
-        //  DisplayData("Somethine went wrong, Could not load the viewer...Make sure you only try to open files ending with '.job.svg'.");
-        //  launch(filePath);
-        //} else {
         DisplayData(".JOB.svg file found. Loading code preview.");
-        localPath = "cd " + localPath + "&& CylinDrawViewer.exe";
-        launch(localPath);
-        //}
+        launchSiblingApp("CylinDrawViewer");
       } 
       catch(RuntimeException e) {  
         launch(filePath);
