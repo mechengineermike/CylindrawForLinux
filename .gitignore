@@ -443,3 +443,6 @@ _site
 vendor
 
 
+
+# Processing exported binaries
+ExecutableCylinDrawForLinux64/
