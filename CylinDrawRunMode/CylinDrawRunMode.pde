@@ -142,11 +142,42 @@ String   previewName = "";
 
 boolean  bVerbose = true; //only for troubleshooting for me!
 String   sLog = " ";//for writing troubleshooting notes
+boolean  bSerialDebug = true;
+boolean  bSerialDebugToConsole = true;
+int      iSerialBaud = 38400;//40000;
 
-boolean  bManual = true;//auto vs manual usb connect
+boolean  bManual = false;//auto vs manual usb connect
 boolean  bCalibration = false;
 boolean  bDumbNotif = false;
 //////////////////////////////////////////////////////////////////////////
+
+void serialDebug(String msg) {
+  if (!bSerialDebug) {
+    return;
+  }
+  DisplayData("[SERIAL DEBUG] " + msg);
+  if (bSerialDebugToConsole) {
+    println("[SERIAL DEBUG] " + msg);
+  }
+}
+
+void clearCommandQueue(String reason) {
+  iCmdIndex = 0;
+  iCmdMax = 0;
+  cmdQue = new String[500];
+  serialDebug("Command queue reset: " + reason);
+}
+
+String serialBytes(String s) {
+  String out = "";
+  for (int i=0; i<s.length(); i++) {
+    if (i > 0) {
+      out += " ";
+    }
+    out += hex(int(s.charAt(i)), 2);
+  }
+  return out;
+}
 
 void isPortActive() {
   if (!bConnected) {
@@ -241,9 +272,12 @@ boolean openSerialPort() {
       myPort.stop(); 
       bConnected = false;
     }
-    myPort = new processing.serial.Serial(this, portName, 40000); // 9600); //115200 76800 baud, 38400
+    clearCommandQueue("opening port " + portName);
+    serialDebug("Opening port '" + portName + "' at baud " + iSerialBaud + ".");
+    myPort = new processing.serial.Serial(this, portName, iSerialBaud); // 9600); //115200 76800 baud, 38400
     myPort.bufferUntil(';'); //calls serialEvnt when this character is found
     bConnected = true;
+    serialDebug("Port open succeeded. bufferUntil=';'. bConnected=true");
     /*
     delay(3000);//let the arduino com initialize, it takes ~3 seconds unfortunately & program must stop & wait for com!
      iCmdIndex = iCmdMax= 0;
@@ -305,7 +339,6 @@ void selectSerialPort() { //Use selectSerialPor OR isPortActiv but not both (nee
     0);
   if (result != null) {
     portName = result;
-    openSerialPort();
     if (openSerialPort()) {
       //bConnected = true;
       delay(3000);
@@ -417,7 +450,8 @@ void draw() {
 
   if ((millis() - timerConnectHold)>5000) {
     timerConnectHold = millis();
-    if (!bProvenConnection) { 
+    if (!bProvenConnection && portName != null && myPort != null) { 
+      serialDebug("5s watchdog: no proven serial response yet on " + portName + ". Marking disconnected.");
       DisplayData("No responce on port: " + portName); 
       bConnected=false;
     };
@@ -1775,6 +1809,7 @@ boolean checkComplete() {
   String serialLatestComplete =  myPort.readStringUntil(';');// end of line indicator for a command. (buffer until symbol)
   boolean bFound = false;
   if (serialLatestComplete != null) {
+    serialDebug("readStringUntil(';') raw: '" + serialLatestComplete.replace("\n", "\\n").replace("\r", "\\r") + "'");
 
     String trimmed = serialLatestComplete.trim();
     if (trimmed.length() >1 && (trimmed.contains("~") == true || trimmed.contains("@") == true)) { //line returned starts with one or the other. Tildas are just notes. @ means at a position.
@@ -1790,10 +1825,14 @@ boolean checkComplete() {
       //if (bVerbose)
       DisplayData(serialLatestComplete);//" RECEIVED:  " +  //recieved
       //logHold(" RECEIVED:  " + serialLatestComplete+"\n");
+      serialDebug("Accepted complete token. bFound=true, bPenUp=" + bPenUp);
+    } else {
+      serialDebug("Ignored complete token (missing expected '~' or '@'): '" + trimmed + "'");
     }
   } else { 
     String serialAll = myPort.readString();
     if (serialAll != null) {
+      serialDebug("Fallback readString raw: '" + serialAll.replace("\n", "\\n").replace("\r", "\\r") + "'");
       DisplayData(serialAll);
     }
   }  
@@ -1808,8 +1847,10 @@ boolean checkAny() {
   if (serialAll != null) {
     bProvenConnection= true;
     bFound = true;
+    serialDebug("checkAny(): received payload, setting bProvenConnection=true. raw='" + serialAll.replace("\n", "\\n").replace("\r", "\\r") + "'");
     DisplayData(serialAll);
   } else {
+    serialDebug("checkAny(): no bytes available.");
     //if (bVerbose)DisplayData("...no responce on this port.");
   }
   return (bFound);
@@ -1818,9 +1859,11 @@ boolean checkAny() {
 
 void serialEvent(processing.serial.Serial p) { //This function displays serial data returned from the arduino. Is called when recieving special characters
   bProvenConnection = true;
+  serialDebug("serialEvent() fired for port " + portName + ". Forcing bProvenConnection=true.");
   try {    
     if (checkComplete()) {
       bOKtoSend = true;
+      serialDebug("serialEvent(): command completion detected. bOKtoSend=true; running queue.");
       queRun();
     }
 
@@ -1828,6 +1871,7 @@ void serialEvent(processing.serial.Serial p) { //This function displays serial d
   }
 
   catch(RuntimeException e) { 
+    serialDebug("serialEvent runtime exception: " + e.getMessage());
     logHold("serial even error: "+p.readString());
     logWrite(true);
     stream();
@@ -2547,6 +2591,7 @@ void logRead() {//overwrite softlog with hardlog
 }
 
 void queCmd(String sWrite, boolean bCut) {//add to top of stack (myPort command). Que will auto empyt
+  serialDebug("Queue add: '" + sWrite.replace("\n", "\\n") + "', bCut=" + bCut + ", iCmdIndex=" + iCmdIndex + ", iCmdMax=" + iCmdMax);
   if (bCut) {
     for (int step=iCmdMax; step>iCmdIndex; step--) {
       cmdQue[step] = cmdQue[step-1];
@@ -2567,9 +2612,11 @@ void queCmd(String sWrite, boolean bCut) {//add to top of stack (myPort command)
 void queRun() {
   if (checkComplete()) { //very important to check this here to keep commands+ responces in sync. Because the user can click buttons at any time while commands are being communicated
     bOKtoSend = true;
+    serialDebug("queRun(): checkComplete() true, bOKtoSend=true");
   }
   if (bOKtoSend && cmdQue[iCmdIndex] !=null ) { //bsent coordinates the turn taking of sending/recieving
     //bSent = true this var doesnt do its job...
+    serialDebug("queRun(): writing '" + cmdQue[iCmdIndex].replace("\n", "\\n").replace("\r", "\\r") + "' on " + portName + " bytes=" + serialBytes(cmdQue[iCmdIndex]));
     myPort.write(cmdQue[iCmdIndex]);
     if (cmdQue[iCmdIndex].contains("Z10") == true) { 
       bPenUp =true;
@@ -2578,6 +2625,7 @@ void queRun() {
       bPenUp =false;
     }
     bOKtoSend = false;
+    serialDebug("queRun(): write sent; bOKtoSend=false, next iCmdIndex=" + (iCmdIndex+1));
     logHold(cmdQue[iCmdIndex]);
     cmdQue[iCmdIndex]="";
     iCmdIndex ++;

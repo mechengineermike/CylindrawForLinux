@@ -1,4 +1,4 @@
 Note: for this log to properly record data you must exit the program using the EXIT button to give it the chance to log the data. 
   Version: 2.01 @ RunMode CylinDraw Control Suite
- Current Time in ms: 1778886377472
+ Current Time in ms: 1779221659648
 
